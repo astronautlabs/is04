@@ -4,6 +4,7 @@
   "description": "AMWA IS-04 NMOS Discovery and Registration",
   "main": "dist/index.js",
   "scripts": {
+    "gen": "ts-node tools/generate-from-schema.ts spec/APIs/schemas src/schema",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -25,5 +26,11 @@
   "homepage": "https://github.com/astronautlabs/is04#readme",
   "dependencies": {
     "@alterior/web-server": "*"
+  },
+  "devDependencies": {
+    "json-schema-to-typescript": "^10.1.4",
+    "source-map-support": "^0.5.19",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.2.4"
   }
 }
