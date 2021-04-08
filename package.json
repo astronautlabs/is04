@@ -1,0 +1,29 @@
+{
+  "name": "@astronautlabs/is04",
+  "version": "0.0.1",
+  "description": "AMWA IS-04 NMOS Discovery and Registration",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/astronautlabs/is04.git"
+  },
+  "keywords": [
+    "amwa",
+    "nmos",
+    "is-04",
+    "is04",
+    "broadcast"
+  ],
+  "author": "Astronaut Labs, LLC",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/astronautlabs/is04/issues"
+  },
+  "homepage": "https://github.com/astronautlabs/is04#readme",
+  "dependencies": {
+    "@alterior/web-server": "*"
+  }
+}
