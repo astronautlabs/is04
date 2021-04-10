@@ -98,6 +98,8 @@ export async function transformSchema(options : Options) {
                             return defn.allOf.map(x => schemaToTS(x, imports, indent)).join(' & ');
                         } else if (defn.anyOf) {
                             return defn.anyOf.map(x => schemaToTS(x, imports, indent)).join(' | ');
+                        } else if (defn.oneOf) {
+                            return defn.oneOf.map(x => schemaToTS(x, imports, indent)).join(' | ');
                         } else {
                             let props : string[] = [];
         

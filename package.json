@@ -25,9 +25,13 @@
   },
   "homepage": "https://github.com/astronautlabs/is04#readme",
   "dependencies": {
-    "@alterior/web-server": "*"
+    "@alterior/web-server": "*",
+    "mdns": "^2.7.2",
+    "node-fetch": "^2.6.1"
   },
   "devDependencies": {
+    "@types/mdns": "^0.0.33",
+    "@types/node-fetch": "^2.5.10",
     "source-map-support": "^0.5.19",
     "ts-node": "^9.1.1",
     "typescript": "^4.2.4"

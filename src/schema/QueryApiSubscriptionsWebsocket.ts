@@ -1,4 +1,9 @@
-
+import { Node } from "./Node";
+import { Device } from "./Device";
+import { Source } from "./Source";
+import { Flow } from "./Flow";
+import { Sender } from "./Sender";
+import { Receiver } from "./Receiver";
 /**
  * Describes a data Grain sent via the a Query API websocket subscription
  */
@@ -94,16 +99,12 @@ export type QueryApiSubscriptionsWebsocket = {
             /**
              * Representation of the resource undergoing a change prior to the change occurring. Omitted if the resource didn't previously exist.
              */
-            pre? : {
-                
-            },
+            pre? : Node | Device | Source | Flow | Sender | Receiver,
             
             /**
              * Representation of the resource undergoing a change after the change had occurred. Omitted if the resource no longer exists.
              */
-            post? : {
-                
-            }
+            post? : Node | Device | Source | Flow | Sender | Receiver
         }>
     }
 };
