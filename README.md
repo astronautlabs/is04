@@ -20,4 +20,47 @@
 
 ---
 
-Implementation of AMWA's NMOS IS-04 standard for Discovery and Registration.
+Implementation of AMWA's NMOS IS-04 standard for Discovery and Registration. Currently covers the client-side 
+functionality of the standard (ability to implement a Node, ability to register and query such a Node). 
+
+# Usage
+
+```
+npm install @astronautlabs/is04
+```
+
+Then add NodeService to your app:
+```typescript
+import { WebService } from "@alterior/web-server";
+
+@WebService()
+class MyService {
+    @Mount() nodeService : NodeService;
+
+    async altOnInit() {
+        this.nodeService.node = {
+            "version": "1441700172:318426300",
+            "hostname": "host1",
+            "href": "http://172.29.80.65:12345/",
+            "caps": {},
+            // ...
+        };
+
+        await this.nodeService.addDevice({ /* ... */ });
+        await this.nodeService.addSource({ /* ... */ });
+        await this.nodeService.addSender({ /* ... */ });
+        await this.nodeService.addReceiver({ /* ... */ });
+
+        // Once all your initial resources are added, call .register
+        // to find the registration service and register
+        await this.nodeService.register();
+
+        // After registering, you can continue adding resources
+        // and they will be automatically registered with the 
+        // registry
+        
+        await this.nodeService.addReceiver({ /* ... */ });
+    }
+}
+
+```
