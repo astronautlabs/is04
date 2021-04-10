@@ -59,6 +59,10 @@ export class NodeService {
     }
 
     async unregister() {
+
+        clearInterval(this._heartbeatTimer);
+        this._heartbeatTimer = 0;
+
         let registry = await this.getRegistry();
         
         if (registry) {
@@ -79,7 +83,35 @@ export class NodeService {
         }
     }
 
+    private _isRegistered;
+    private _heartbeatTimer;
+    private _heartbeatTime = 1000*5;
+
+    /**
+     * Retrieve the time interval between each heartbeat, which defaults to the recommended 5 seconds
+     */
+    get heartbeatTime() {
+        return this._heartbeatTime;
+    }
+
+    set heartbeatTime(value) {
+        this._heartbeatTime = value;
+    }
+
+    get isRegistered() {
+        return this._isRegistered;
+    }
+
+    private async sendHeartbeat() {
+        let registry = await this.getRegistry();
+        registry.heartbeat(this.node.id);
+    }
+
     async register() {
+        if (this._isRegistered) {
+            await this.unregister();
+        }
+
         let registry = await this.getRegistry();
         if (registry) {
             let result = await this.registerResource('node', this.node);
@@ -102,6 +134,8 @@ export class NodeService {
                 await this.registerResource('sender', sender);
             for (let receiver of this._receivers)
                 await this.registerResource('sender', receiver);
+
+            this._heartbeatTimer = setInterval(() => this.sendHeartbeat(), this._heartbeatTime);
 
         } else {
             // peer-to-peer mode
