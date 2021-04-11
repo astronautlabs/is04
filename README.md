@@ -32,30 +32,56 @@ Passes the IS-04 suites of the [NMOS Test](https://github.com/AMWA-TV/nmos-testi
 npm install @astronautlabs/is04
 ```
 
-Then add NodeService to your app:
+Then add `IS04Module` to your app, mount `NodeApi`, inject `RegistryService`
+and get started:
+
 ```typescript
 import { WebService } from "@alterior/web-server";
+import { IS04Module, NodeApi, RegistryService } from "@astronautlabs/is04";
 
-@WebService()
+@WebService({
+    imports: [ IS04Module ],
+    server: {
+        // ...
+
+        // You should make sure to implement CORS in some way
+        // as it is required by the specification
+        middleware: [ CORS ], // see below
+        
+        // You should ensure that 404s conform to the NMOS 
+        // API style:
+        defaultHandler: ev => {
+            ev.response.status(404).json(<Error>{
+                code: 404,
+                debug: 'not-found',
+                error: 'The resource was not found'
+            });
+        }
+    }
+})
 class MyService {
-    @Mount() nodeService : NodeService;
+    constructor(
+        private registry : RegistryService
+    ) {
+    }
+
+    @Mount() nodeService : NodeApi;
 
     async altOnInit() {
-        this.nodeService.node = {
-            "version": "1441700172:318426300",
-            "hostname": "host1",
-            "href": "http://172.29.80.65:12345/",
-            "caps": {},
-            // ...
-        };
+        await this.registry.init();
 
+        this.registry.node.label = 'My Node';
+        this.registry.node.description = 'This is my NMOS node';
+        // ...and otherwise customize this.registry.node
+
+        // Add your initial resources
         await this.nodeService.addDevice({ /* ... */ });
         await this.nodeService.addSource({ /* ... */ });
         await this.nodeService.addSender({ /* ... */ });
         await this.nodeService.addReceiver({ /* ... */ });
 
-        // Once all your initial resources are added, call .register
-        // to find the registration service and register
+        // Once all your initial resources are added, call .register()
+        // to find the registration service and register them
         await this.nodeService.register();
 
         // After registering, you can continue adding resources
@@ -91,7 +117,3 @@ class MyService {
     nodeService : NodeService;
 }
 ```
-
-## Handle 404s appropriately
-
-The default 404 error handler from Alterior is insufficient to pass the NMOS test suite, because errors must use the `Error` schema from IS-04.
