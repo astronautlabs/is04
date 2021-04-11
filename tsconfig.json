@@ -7,6 +7,7 @@
       "sourceMap": true,
       "experimentalDecorators": true,
       "emitDecoratorMetadata": true,
+      "esModuleInterop": true,
       "target": "ES2016",
       "typeRoots" : ["types", "node_modules/@types"],
       "outDir": "dist",

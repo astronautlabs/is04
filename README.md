@@ -20,8 +20,10 @@
 
 ---
 
-Implementation of AMWA's NMOS IS-04 standard for Discovery and Registration. Currently covers the client-side 
+Implementation of AMWA's NMOS IS-04 standard for Discovery and Registration. Currently covers the Node API and related
 functionality of the standard (ability to implement a Node, ability to register and query such a Node). 
+
+Passes the IS-04 suites of the [NMOS Test](https://github.com/AMWA-TV/nmos-testing) tool.
 
 # Usage
 
@@ -58,9 +60,37 @@ class MyService {
         // After registering, you can continue adding resources
         // and they will be automatically registered with the 
         // registry
-        
+
         await this.nodeService.addReceiver({ /* ... */ });
     }
 }
-
 ```
+
+## Add CORS
+
+To be spec-compliant, you must implement CORS for this API. You should attach a middleware that handles CORS to your requirements. The following example opens CORS broadly, though this may not be suitable for a production deployment.
+
+```typescript
+function CORS(req : express.Request, res : express.Response, next : Function) {
+    res
+        .header('Access-Control-Allow-Origin', req.header('origin') || '*')
+        .header('Access-Control-Allow-Methods', 'GET, PUT, POST, PATCH, HEAD, OPTIONS, DELETE')
+        .header('Access-Control-Allow-Headers', 'Content-Type, Accept')
+        .header('Access-Control-Max-Age', '3600')
+    ;
+    next();
+}
+
+@WebService({
+    server: [
+        middleware: [ CORS ]
+    ]
+})
+class MyService {
+    nodeService : NodeService;
+}
+```
+
+## Handle 404s appropriately
+
+The default 404 error handler from Alterior is insufficient to pass the NMOS test suite, because errors must use the `Error` schema from IS-04.

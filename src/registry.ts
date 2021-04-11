@@ -1,6 +1,7 @@
 import { Service } from "./dns-sd";
 import { Device, Flow, Node, Receiver, RegistrationApiHealthResponse, RegistrationApiResourcePostRequest, ResourceCore, Sender, Source } from "./schema";
 import fetch from 'node-fetch';
+import AbortController from 'abort-controller';
 
 export interface RegistrationResult<T> {
     status : 'registered' | 'already-registered';
@@ -10,11 +11,42 @@ export interface RegistrationResult<T> {
 }
 
 export class Registry {
-    constructor(readonly service : Service) {
+    private constructor(readonly service : Service) {
+    }
+
+    get version() {
+        return this.service.getProperty('api_ver');
     }
 
     get url() {
-        return `${this.service.getProperty('api_proto')}://${this.service.hostname}:${this.service.port}`;
+        return `${this.service.getProperty('api_proto')}://${this.service.hostname}:${this.service.port}/x-nmos/registration/${this.version}`;
+    }
+
+    static async accept(svc : Service): Promise<Registry> {
+        let url = `${svc.getProperty('api_proto')}://${svc.hostname}:${svc.port}/x-nmos/registration/${svc.getProperty('api_ver')}`;
+        let apiVersion = svc.getProperty('api_ver');
+        let [majorTxt, minorTxt] = apiVersion.replace(/^v/, '').split('.');
+        let major = Number(majorTxt), minor = Number(minorTxt);
+
+        try {
+            if (!['http', 'https'].includes(svc.getProperty('api_proto')))
+                throw new Error(`Service must use http or https, not ${svc.getProperty('api_proto')}`);
+
+            if (major > 1)
+                throw new Error(`Service has version ${apiVersion}, this client only supports v1.x`);
+
+            // Try to connect to it to be sure it's working 
+            // let response = await fetch(url, { timeout: 2000 });
+            // if (response.status >= 400) {
+            //     let text = await response.text();
+            //     throw new Error(`Could not contact registration API found at ${url}: ${response.status} ${response.statusText}, body was '${text}'`);
+            // }
+
+            return new Registry(svc);
+        } catch (e) {
+            console.error(`[NMOS IS-04] ERROR :: Registration service ${url} (${apiVersion}) was not acceptable: ${e.message}`);
+            throw e;
+        }
     }
 
     async get(type : 'nodes', id : string): Promise<Node>;
@@ -35,10 +67,9 @@ export class Registry {
     }
 
     async delete(type : 'nodes' | 'devices' | 'sources' | 'flows' | 'senders' | 'receivers', id : string): Promise<void> {
-        let response = await fetch(`${this.url}/resource/${type}/${id}`);
-        let body = await response.json();
+        let response = await fetch(`${this.url}/resource/${type}/${id}`, { method: 'delete' });
         if (response.status >= 400)
-            throw new Error(`Failed to delete resource of type ${type} with ID ${id}: ${response.status} ${response.statusText}. Response: ${JSON.stringify(body)}`);
+            throw new Error(`Failed to delete resource of type ${type} with ID ${id}: ${response.status} ${response.statusText}`);
     }
 
     async register(type : 'node', resource : Node): Promise<RegistrationResult<Node>>;
@@ -51,14 +82,20 @@ export class Registry {
     async register<T extends ResourceCore>(type : string, resource : T): Promise<RegistrationResult<T>> {
         let response = await fetch(`${this.url}/resource`, {
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(<RegistrationApiResourcePostRequest>{ type, resource })
+            method: 'POST',
+            timeout: 5000,
+            body: JSON.stringify(<RegistrationApiResourcePostRequest>{ type, data: <any>resource })
         });
+
+        if (response.status >= 500) {
+            throw new Error(`Server error: Failed to register ${type}/${resource.id}: ${response.status} ${response.statusText}`);
+        } else if (response.status >= 400) {
+            let bodyText = await response.text();
+            throw new Error(`Client error: Failed to register ${type}/${resource.id}: ${response.status} ${response.statusText}. Body: '${bodyText}'`);
+        }
 
         let body = await response.json();
 
-        if (response.status >= 400)
-            throw new Error(`Failed to register resource of type ${type} with ID ${resource.id}: ${response.status} ${response.statusText}. Response: ${JSON.stringify(body)}`);
-        
         return {
             status: response.status === 200 ? 'already-registered' : 'registered',
             location: response.headers.get('Location'),
@@ -67,13 +104,26 @@ export class Registry {
         }
     }
 
-    async heartbeat(id : string): Promise<RegistrationApiHealthResponse> {
+    async heartbeat(id : string, timeout : number): Promise<RegistrationApiHealthResponse> {
+        let controller = new AbortController();
+        let timeoutHandle = setTimeout(() => controller.abort(), timeout);
         let response = await fetch(`${this.url}/health/nodes/${id}`, {
             method: 'post',
+            signal: controller.signal,
             headers: { 'Content-Type': 'application/json' } 
         });
 
-        let body = await response.json();
+        clearTimeout(timeoutHandle);
+
+        let bodyText = await response.text();
+        let body;
+
+        try {
+            body = JSON.parse(bodyText);
+        } catch (e) {
+            console.warn(`[NMOS IS-04] ERROR: Failed to parse heartbeat response from registry (${response.status} ${response.statusText}): ${e.message}`);
+            throw e;
+        }
 
         if (response.status >= 400)
             throw new Error(`Failed to send heartbeat for resource ID ${id}: ${response.status} ${response.statusText}. Response: ${JSON.stringify(body)}`);
@@ -93,17 +143,5 @@ export class Registry {
             throw new Error(`Failed to get health for resource ID ${id}: ${response.status} ${response.statusText}. Response: ${JSON.stringify(body)}`);
         
         return body;
-    }
-
-    static async locate(domain? : string): Promise<Service[]> {
-        let services : Service[] = [];
-        
-        if (domain)
-            services = await Service.browseUnicast('nmos-register', 'tcp', domain);
-
-        if (services.length === 0)
-            services = await Service.browseMulticast('nmos-register', 'tcp');
-
-        return services;
     }
 }
