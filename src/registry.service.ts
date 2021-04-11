@@ -165,6 +165,35 @@ export class RegistryService {
             await this._registry.register(type, resource);
     }
 
+    getTypeOfResourceById(id : string) {
+        if (this._node.id === id)
+            return 'node';
+        let collections = { 
+            sources: 'source', devices: 'device', senders: 'sender', receivers: 'receiver', flows: 'flow' 
+        };
+
+        for (let coll of Object.keys(collections)) 
+            if ((<ResourceCore[]>this[coll]).some(x => x.id === id))
+                return collections[coll];
+        
+        return null;
+    }
+
+    getResourceById(id : string) {
+        if (this._node.id === id)
+            return this._node;
+        
+        let collections = ['sources', 'devices', 'senders', 'receivers', 'flows'];
+
+        for (let coll of collections) {
+            let match = (<ResourceCore[]>this[coll]).find(x => x.id === id);
+            if (match)
+                return match;
+        }
+
+        return null;
+    }
+
     getTypeOfResource(resource : ResourceCore) {
         if (this._node === resource)
             return 'node';
@@ -567,7 +596,7 @@ export class RegistryService {
             mdns.tcp('nmos-node'), 
             port, 
             {
-                
+
                 txtRecord: {
                     api_proto: 'http',
                     api_ver: 'v1.3',
