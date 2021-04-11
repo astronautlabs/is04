@@ -3,11 +3,15 @@
   "version": "0.0.1",
   "description": "AMWA IS-04 NMOS Discovery and Registration",
   "main": "dist/index.js",
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc -b",
     "test:node": "npm run build && ts-node tools/test-node.ts",
     "gen": "ts-node tools/generate-from-schema.ts spec/APIs/schemas src/schema",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "npm run build",
+    "prepublishOnly": "npm test"
   },
   "repository": {
     "type": "git",
