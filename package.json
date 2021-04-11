@@ -1,6 +1,6 @@
 {
   "name": "@astronautlabs/is04",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "AMWA IS-04 NMOS Discovery and Registration",
   "main": "dist/index.js",
   "publishConfig": {
