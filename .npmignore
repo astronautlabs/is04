@@ -1,0 +1,6 @@
+spec/
+src/test.ts
+src/**/*.test.ts
+dist/test.js
+dist/**/*.test.js
+tools/
