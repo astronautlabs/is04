@@ -49,7 +49,7 @@ class MyService {
         
         this.registry.node.services = [
             {
-                "href": `https://${os.hostname}:${WebServer.for(this).options.port}/x-astronautlabs/splicepoint/`,
+                "href": `http://${os.hostname}:${WebServer.for(this).options.port}/x-astronautlabs/splicepoint/`,
                 "authorization": false,
                 "type": "urn:x-astronautlabs:service:splicepoint"
             }
