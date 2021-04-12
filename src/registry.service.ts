@@ -641,7 +641,7 @@ export class RegistryService {
             source.id = uuid();
         this._sources.push(<Source>source);
         await this.registerResource('source', source);
-        return source;
+        return <Source>source;
     }
 
     async addDevice(device : Partial<Device>) {
@@ -649,7 +649,7 @@ export class RegistryService {
             device.id = uuid();
         this._devices.push(<Device>device);
         await this.registerResource('device', device);
-        return device;
+        return <Device>device;
     }
 
     async addFlow(flow : Partial<Flow>) {
@@ -657,7 +657,7 @@ export class RegistryService {
             flow.id = uuid();
         this._flows.push(<Flow>flow);
         await this.registerResource('flow', flow);
-        return flow;
+        return <Flow>flow;
     }
 
     async addSender(sender : Partial<Sender>) {
@@ -665,7 +665,7 @@ export class RegistryService {
             sender.id = uuid();
         this._senders.push(<Sender>sender);
         await this.registerResource('sender', sender);
-        return sender;
+        return <Sender>sender;
     }
 
     async addReceiver(receiver : Partial<Receiver>) {
@@ -673,6 +673,6 @@ export class RegistryService {
             receiver.id = uuid();
         this._receivers.push(<Receiver>receiver);
         await this.registerResource('sender', receiver);
-        return receiver;
+        return <Receiver>receiver;
     }
 }
