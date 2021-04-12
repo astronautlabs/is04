@@ -621,39 +621,58 @@ export class RegistryService {
     private _nodeAdvert : mdns.Advertisement;
 
     private async registerResource(type : string, resource : any) {
-        let registry = await this.getRegistry();
-        try {
-            return await registry.register(type, resource);
-        } catch (e) {
-            await this.handleRegistryError(e, true);
-        }
-    }
-
-    async addSource(source : Source) {
-        this._sources.push(source);
         if (this._registered) {
-            // TODO: send registration here
+            let registry = await this.getRegistry();
+            if (!registry)
+                return;
+            
+            try {
+                return await registry.register(type, resource);
+            } catch (e) {
+                await this.handleRegistryError(e, true);
+            }
         }
+
+        await this.updateResource(resource);
     }
 
-    async addDevice(device : Device) {
-        this._devices.push(device);
+    async addSource(source : Partial<Source>) {
+        if (!source.id)
+            source.id = uuid();
+        this._sources.push(<Source>source);
+        await this.registerResource('source', source);
+        return source;
+    }
+
+    async addDevice(device : Partial<Device>) {
+        if (!device.id)
+            device.id = uuid();
+        this._devices.push(<Device>device);
         await this.registerResource('device', device);
+        return device;
     }
 
-    async addFlow(flow : Flow) {
-        this._flows.push(flow);
+    async addFlow(flow : Partial<Flow>) {
+        if (!flow.id)
+            flow.id = uuid();
+        this._flows.push(<Flow>flow);
         await this.registerResource('flow', flow);
+        return flow;
     }
 
-    async addSender(sender : Sender) {
-        this._senders.push(sender);
+    async addSender(sender : Partial<Sender>) {
+        if (!sender.id)
+            sender.id = uuid();
+        this._senders.push(<Sender>sender);
         await this.registerResource('sender', sender);
+        return sender;
     }
 
-    async addReceiver(receiver : Receiver) {
-        this._receivers.push(receiver);
+    async addReceiver(receiver : Partial<Receiver>) {
+        if (!receiver.id)
+            receiver.id = uuid();
+        this._receivers.push(<Receiver>receiver);
         await this.registerResource('sender', receiver);
+        return receiver;
     }
-
 }
