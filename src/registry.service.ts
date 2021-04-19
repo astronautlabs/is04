@@ -239,12 +239,6 @@ export class RegistryService {
 
     private async findAcceptableRegistry(refresh = false) {
         this._registryServices = await this.queryForRegistryServices();
-
-        this.log(`Selecting from ${this._registryServices.length} available registries:`);
-        for (let item of this._registryServices) {
-            this.log(` - [${item.ignored ? 'ignored' : 'ready'}] ${item.name}: ${item.hostname}:${item.port}, pri=${item.priority}, weight=${item.weight}, meta=${JSON.stringify(item.metadata)}`);
-        }
-
         return await Service.select(this._registryServices, s => Registry.accept(s));
     }
 
@@ -548,10 +542,8 @@ export class RegistryService {
                 return;
             }
 
-            this.log(`P2P: Checking if we have an acceptable registry yet...`);
-            if (await this.findAcceptableRegistry(true)) {
+            if (await this.findAcceptableRegistry(true))
                 await this.register();
-            }
         }, 60*1000);
 
         // If we can't reconnect to the registry within two heartbeat cycles, 

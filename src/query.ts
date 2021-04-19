@@ -1,8 +1,24 @@
 import { Service } from "./dns-sd";
-import { Device, Flow, Receiver, Sender, Source } from "./schema";
+import { Device, Flow, Node, Receiver, Sender, Source } from "./schema";
 import { formEncode } from "./utils";
 
-export class Query {
+export interface QueryInterface {
+    queryNodes     (options? : any) : Promise<Node[]>;
+    querySources   (options? : any) : Promise<Source[]>;
+    queryFlows     (options? : any) : Promise<Flow[]>;
+    queryDevices   (options? : any) : Promise<Device[]>;
+    querySenders   (options? : any) : Promise<Sender[]>;
+    queryReceivers (options? : any) : Promise<Receiver[]>;
+
+    getNode(id : string): Promise<Node>;
+    getSource(id : string): Promise<Source>;
+    getFlow(id : string): Promise<Flow>;
+    getDevice(id : string): Promise<Device>;
+    getSender(id : string): Promise<Sender>;
+    getReceiver(id : string): Promise<Receiver>;
+}
+
+export class Query implements QueryInterface {
     constructor(readonly service : Service) {
     }
 

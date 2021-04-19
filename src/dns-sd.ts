@@ -23,6 +23,30 @@ export class Service {
     ) {
     }
 
+    static fromMulticast(service : mdns.Service) {
+        return new Service(
+            service.name,
+            service.addresses[0], 
+            service.port, 
+            Number(service.txtRecord['pri']) || 0, 
+            100, 
+            service.txtRecord,
+            Date.now() + 10*1000 // TODO
+        );
+    }
+
+    static fromUnicast(hostname : string, srvRecord : dns.AnySrvRecord, metadata : Record<string,string>) {
+        return new Service(
+            hostname,
+            srvRecord.name, 
+            srvRecord.port, 
+            srvRecord.priority, 
+            srvRecord.weight, 
+            metadata, 
+            Date.now() + 10*1000 // TODO
+        );
+    }
+
     get expired() {
         return Date.now() > this.expiresAt;
     }
@@ -105,15 +129,7 @@ export class Service {
             browser.on('serviceUp', service => {
                 if (!services.some(x => x.hostname === service.addresses[0] && x.port === service.port)) {
                     console.log(`[DNS-SD] Multicast: _${serviceName}._${protocol}: Found ${service.addresses[0]}:${service.port} with meta ${JSON.stringify(service.txtRecord)}`);    
-                    services.push(new Service(
-                        service.name,
-                        service.addresses[0], 
-                        service.port, 
-                        Number(service.txtRecord['pri']) || 0, 
-                        100, 
-                        service.txtRecord,
-                        Date.now() + 10*1000 // TODO
-                    ));
+                    services.push(Service.fromMulticast(service));
                 }
                 
                 clearTimeout(finishedTimeout);
@@ -155,14 +171,6 @@ export class Service {
             }
         }
 
-        return new Service(
-            hostname,
-            srvRecord.name, 
-            srvRecord.port, 
-            srvRecord.priority, 
-            srvRecord.weight, 
-            metadata, 
-            Date.now() + 10*1000 // TODO
-        );
+        return Service.fromUnicast(hostname, srvRecord, metadata);
     }
 }

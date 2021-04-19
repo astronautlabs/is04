@@ -9,6 +9,7 @@
   "scripts": {
     "build": "tsc -b",
     "test:node": "npm run build && ts-node tools/test-node.ts",
+    "test:query": "npm run build && ts-node tools/test-query.ts",
     "gen": "ts-node tools/generate-from-schema.ts spec/APIs/schemas src/schema",
     "test": "npm run build",
     "prepublishOnly": "npm test"
